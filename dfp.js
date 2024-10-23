@@ -1,54 +1,49 @@
 const fs = require('fs');
 
-function parseFile (indata, outdata, delimiter = ';') {
-  
+function parseFile(indata, outdata, delimiter = ';') {
   if (!fs.existsSync(indata)) {
     return -1;
   }
 
-  //Delete the output file 
+  // Delete the output file if it exists
   if (fs.existsSync(outdata)) {
     fs.unlinkSync(outdata);
   }
 
-  //Read input file 
-  const fileContent = fs.readFileSync(indata, 'utf-8')
+  let recordCount = 0;
+  try {
+    // Read input file
+    const fileContent = fs.readFileSync(indata, 'utf-8');
 
-  //Split the input file into different lines
-  const lines = fileContent.split(/\n/)
+    // Split the input file into different lines
+    const lines = fileContent.split(/\n/);
+    
+    // Run through each line and trim
 
-  //Count number of records
-  let recordCount = 0
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line === '') continue;
 
-  //Run through each line and trim
-  for (let i = 1; i < lines.length; i++) {
-    if (lines[i].trim() === ''){
-      continue;
+      const [review, sentiment] = line.split(delimiter).map(item => item.trim());
+
+      // Shorten review to 20 characters
+      const shortReview = review.substring(0, 20);
+      console.log(shortReview)
+
+      // Add new line to output file using append (Corrected line)
+      fs.appendFileSync(outdata, `${sentiment}${delimiter}${shortReview}\n`, 'utf-8'); 
+      recordCount++;
     }
-
-  //Split it into 2 columns, sentiment and review
-  let column = lines[i].split(delimiter)
-  let sentiment = column[0].trim()
-  let review = column[1].trim()
-
-  //Shorten review to 20 characters
-  review = review.substring(0,20)
-
-  //Add new line to output file using append
-  let newColumn = `${sentiment}${delimiter}${review}\n`
-  fs.appendFileSync(outdata, newColumn, 'utf-8');
-  recordCount++ ;
-
-  //return total number of records
-  return recordCount;
+  } catch (err) {
+    console.error('Error parsing file:', err); 
+    return -1; 
   }
-  //Error checks
+
+  // Return total number of records
+  return recordCount;
 }
-
-
-
   
-
+parseFile('./datafile.csv', './outputfile.csv')
 
 
 // Leave this code here for the automated tests
